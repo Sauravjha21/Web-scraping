@@ -1,43 +1,34 @@
-import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-
-
-def get_a_tags(driver, class_="titolo"):
-    html = driver.page_source
-    soup = BeautifulSoup(html, "html.parser")
-    a_tags = soup.find_all("a", class_=class_)
-    return a_tags
-
-
-def print_page_data(driver):
-    a_tags = get_a_tags(driver)
-    for a_tag in a_tags:
-        data = parse_a_tag(a_tag)
-        print(data)
-    return 0
-
-
-def parse_a_tag(a_tag):
-    return (a_tag["href"], a_tag.text)
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 
 if __name__ == "__main__":
-
-    # Initiate browser, navigate to page and wait for JS to load properly
-    # options = webdriver.FirefoxOptions()
-    # options.binary_location = "/Users/pierredm/Downloads/geckodriver"
-    driver = webdriver.Firefox()
-    driver.get("https://www.quirinale.it/ricerca/comunicati")
-    time.sleep(5)
-    print_page_data(driver)
-
-    for i in range(1, 10):
-        pagination = driver.find_elements(By.CLASS_NAME, "js-paginatore")
-        pagination[i - 1].click()
-        time.sleep(5)
-        print_page_data(driver)
+    options = Options()
+    # we use the browser in headless mode, this can be useful if we run the script on a dedicated server
+    # or if we just want to avoid popping a window on our computer
+    options.add_argument('--headless=new')
+    driver = webdriver.Chrome(options=options)
+    driver.get("https://www.lemonde.fr/")
+    # make sure to manage the case where it fails, to avoid getting multiple browser running in the bg of your machine
+    try:
+        element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'ul.Live__center')))
+        live_banner_html = element.get_attribute(("innerHTML"))
+        if live_banner_html == None:
+            raise Exception("absent-live-banner")
+        banner_elements = BeautifulSoup(live_banner_html, "html.parser").find_all(
+            "li", class_="New")
+        if len(banner_elements) == 0:
+            raise Exception("absent-live-banner-elements")
+        for element in banner_elements:
+            title = element.find("div", class_="New__content").get_text()
+            time = element.find("div", class_="New__time").get_text()
+            print("{}, {}".format(time, title))
+    except Exception as e:
+        print(e)
+        driver.close()
 
     driver.close()
