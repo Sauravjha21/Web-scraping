@@ -31,12 +31,12 @@ if __name__ == "__main__":
 
         # now, navigate to the main page of wikipedia, do a search and take a screenshot of the result
         driver.get("https://en.wikipedia.org/wiki/Main_Page")
-        input_box = driver.find_element(By.CLASS_NAME, "cdx-text-input__input")
+        input_box = driver.find_element(By.NAME, "search")
         input_box.send_keys("chirality")
 
         # to avoid the stale element exception, it is recommended to relocate the element after it has been used
         # see: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#stale-element-reference-exception
-        input_box = driver.find_element(By.CLASS_NAME, "cdx-text-input__input")
+        input_box = driver.find_element(By.NAME, "search")
         input_box.send_keys(Keys.RETURN)
         element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, 'firstHeading')))
